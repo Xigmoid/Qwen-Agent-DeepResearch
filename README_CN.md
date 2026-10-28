@@ -44,15 +44,14 @@
 
 整条链路是**五个阶段**，从左到右：
 
-```
- ┌──────────────┐   ┌───────────────────────┐   ┌─────────────────────┐   ┌──────────────────┐   ┌────────────────┐
- │ ① 问题集      │ → │ ② DeepResearch Agent   │ → │ ③ 标注 runner       │ → │ ④ 轨迹 JSONL     │ → │ ⑤ OpenAI SFT   │
- │ 3 个 JSON     │   │ 4 个工具 + 系统提示词  │   │ 可恢复 / 进程隔离   │   │ 逐轮 messages     │   │ messages+tools  │
- │ 11,896 题     │   │ max_llm_calls 预算    │   │ 超时 / 并发         │   │ 工具调用计数      │   │ 校验 + 脱敏     │
- └──────────────┘   └───────────────────────┘   └─────────────────────┘   └──────────────────┘   └────────────────┘
-         ▲                      ▲                          ▲
- data/questions/            scripts/                   scripts/
-                   assistant_deep_research.py   annotate_questions.py
+```mermaid
+flowchart LR
+    Q["<b>① 问题集</b><br/>3 个 JSON 文件<br/>11,896 题<br/><code>data/questions/</code>"]
+    A["<b>② DeepResearch Agent</b><br/>4 个工具 + 系统提示词<br/>max_llm_calls 预算<br/><code>scripts/assistant_deep_research.py</code>"]
+    R["<b>③ 标注 runner</b><br/>可恢复 / 进程隔离<br/>超时 / 并发<br/><code>scripts/annotate_questions.py</code>"]
+    T["<b>④ 轨迹 JSONL</b><br/>逐轮 messages<br/>工具调用计数<br/><code>outputs/deep_research_annotations/</code>"]
+    S["<b>⑤ OpenAI SFT</b><br/>messages + tools<br/>校验 + 脱敏<br/><code>outputs/openai_messages/</code>"]
+    Q --> A --> R --> T --> S
 ```
 
 ### ① 问题集

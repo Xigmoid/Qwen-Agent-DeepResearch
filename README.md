@@ -44,15 +44,14 @@ Steps 3 and 4 are the hard part: the framework's own memory compacts history, pa
 
 The pipeline has **five stages**:
 
-```
- ┌──────────────┐   ┌───────────────────────┐   ┌─────────────────────┐   ┌──────────────────┐   ┌────────────────┐
- │ ① Questions   │ → │ ② DeepResearch Agent  │ → │ ③ Annotation runner  │ → │ ④ Trace JSONL    │ → │ ⑤ OpenAI SFT   │
- │ 3 JSON files  │   │ 4 tools + system      │   │ resumable / isolated│   │ per-turn messages│   │ messages+tools │
- │ 11,896 items  │   │ prompt + call budget  │   │ timeout / parallel  │   │ tool call counts │   │ validation     │
- └──────────────┘   └───────────────────────┘   └─────────────────────┘   └──────────────────┘   └────────────────┘
-         ▲                      ▲                          ▲
- data/questions/            scripts/                   scripts/
-                   assistant_deep_research.py   annotate_questions.py
+```mermaid
+flowchart LR
+    Q["<b>① Questions</b><br/>3 JSON files<br/>11,896 items<br/><code>data/questions/</code>"]
+    A["<b>② DeepResearch Agent</b><br/>4 tools + system prompt<br/>prompt + call budget<br/><code>scripts/assistant_deep_research.py</code>"]
+    R["<b>③ Annotation runner</b><br/>resumable / isolated<br/>timeout / parallel<br/><code>scripts/annotate_questions.py</code>"]
+    T["<b>④ Trace JSONL</b><br/>per-turn messages<br/>tool call counts<br/><code>outputs/deep_research_annotations/</code>"]
+    S["<b>⑤ OpenAI SFT</b><br/>messages + tools<br/>validation<br/><code>outputs/openai_messages/</code>"]
+    Q --> A --> R --> T --> S
 ```
 
 ### ① Question sets
