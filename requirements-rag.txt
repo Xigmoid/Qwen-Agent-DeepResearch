@@ -1,0 +1,20 @@
+# Optional dependencies for local-document handling.
+#
+#   pip install -r requirements-rag.txt
+#
+# Needed only if you want to use the `search_local_docs` tool with PDF/Word/PPT
+# attachments, or to read PDF web pages through `read_webpage`.
+# Without these, both features degrade gracefully: the agent receives an
+# explicit "install the RAG dependencies" message instead of crashing.
+
+charset-normalizer
+rank_bm25
+jieba
+snowballstemmer
+beautifulsoup4
+pdfminer.six
+pdfplumber
+python-docx
+python-pptx
+pandas
+tabulate

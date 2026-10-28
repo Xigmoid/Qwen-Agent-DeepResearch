@@ -1,0 +1,18 @@
+{
+  "llm": {
+    "model": "Qwen3-32B",
+    "model_type": "oai",
+    "model_server": "http://127.0.0.1:8000/v1",
+    "api_key": "${LLM_API_KEY}",
+    "generate_cfg": {
+      "use_raw_api": true,
+      "extra_body": {
+        "enable_thinking": true
+      },
+      "max_retries": 8
+    }
+  },
+  "agent": {
+    "max_llm_calls": 20
+  }
+}

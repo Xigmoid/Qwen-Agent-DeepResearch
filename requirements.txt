@@ -1,0 +1,30 @@
+# Core dependencies for the DeepResearch trajectory-synthesis pipeline.
+#
+#   pip install -r requirements.txt
+#
+# The pipeline talks to an OpenAI-compatible, tool-calling capable endpoint
+# (vLLM / SGLang / OpenAI / DashScope compatible-mode).  See README.md.
+
+# LLM client (qwen_agent/llm/oai.py)
+openai>=1.0.0
+
+# Message schema + validation (qwen_agent/llm/schema.py, tools/*)
+pydantic>=2.3.0
+
+# HTTP for web_search / read_webpage and for the OpenAI SDK
+requests>=2.28.0
+
+# Token counting for context management (qwen_agent/utils/tokenization_qwen.py)
+tiktoken>=0.5.0
+
+# JSON5 parsing (qwen_agent/utils/utils.py, memory/, tools/retrieval.py)
+json5>=0.9.0
+
+# JSON Schema validation of tool definitions (qwen_agent/tools/base.py)
+jsonschema>=3.0.0
+
+# .env loading for the optional MCP manager (qwen_agent/tools/mcp_manager.py)
+python-dotenv>=1.0.0
+
+# PEP 585 generics on Python 3.9
+eval_type_backport; python_version < "3.10"
