@@ -17,7 +17,7 @@ from unittest import mock
 
 import pytest
 
-from examples.assistant_deep_research import (
+from scripts.assistant_deep_research import (
     ReadWebpage,
     ResearchNotes,
     SearchLocalDocs,
@@ -92,7 +92,7 @@ def test_web_search_uses_serper_or_bing_fallback(monkeypatch):
             'date': '2026-01-01',
         }]
     }))
-    monkeypatch.setattr('examples.assistant_deep_research.requests.post', post)
+    monkeypatch.setattr('scripts.assistant_deep_research.requests.post', post)
     monkeypatch.setenv('SERPER_API_KEY', 'test-key')
     monkeypatch.delenv('SERPER_URL', raising=False)
 
@@ -109,7 +109,7 @@ def test_web_search_uses_serper_or_bing_fallback(monkeypatch):
            '<item><title>Bing internal</title><link>https://cn.bing.com/search?q=x</link></item>'
            '</channel></rss>')
     get = mock.Mock(return_value=FakeResponse(text=rss, content_type='application/rss+xml'))
-    monkeypatch.setattr('examples.assistant_deep_research.requests.get', get)
+    monkeypatch.setattr('scripts.assistant_deep_research.requests.get', get)
 
     bing = json.loads(WebSearch().call({'query': 'qwen agent', 'num_results': 3}))
     assert len(bing) == 1
@@ -124,7 +124,7 @@ def test_read_webpage_follows_redirect_and_paginates(monkeypatch):
             '<button>BUTTON_ONLY</button></body></html>')
     response = FakeResponse(text=html, url='https://final.example/page')
     get = mock.Mock(return_value=response)
-    monkeypatch.setattr('examples.assistant_deep_research.requests.get', get)
+    monkeypatch.setattr('scripts.assistant_deep_research.requests.get', get)
 
     out = ReadWebpage().call({'url': 'https://start.example/page', 'max_chars': 1000})
     assert out.startswith('URL: https://final.example/page')

@@ -22,7 +22,7 @@ cd "$ROOT_DIR"
 
 PYTHON="${PYTHON:-python3}"
 
-exec "$PYTHON" tests/examples/annotate_questions.py \
+exec "$PYTHON" scripts/annotate_questions.py \
   --workers "${ANNOTATION_WORKERS:-3}" \
   --timeout-seconds "${ANNOTATION_TIMEOUT:-900}" \
   --save-trace \

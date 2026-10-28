@@ -22,14 +22,14 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 
-ROOT = Path(__file__).resolve().parents[2]
+ROOT = Path(__file__).resolve().parents[1]
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
 import qwen_agent.agents.fncall_agent as fncall_agent  # noqa: E402
-from examples.assistant_deep_research import init_agent_service  # noqa: E402
+from scripts.assistant_deep_research import init_agent_service  # noqa: E402
 
-DEFAULT_QUESTIONS_DIR = ROOT / 'tests/examples/datasets/annotation_sources/questions'
+DEFAULT_QUESTIONS_DIR = ROOT / 'data/questions'
 DEFAULT_OUTPUT_DIR = ROOT / 'outputs/deep_research_annotations'
 SUCCESS_STATUSES = {'passed'}
 

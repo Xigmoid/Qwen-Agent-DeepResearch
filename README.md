@@ -50,20 +50,20 @@ The pipeline has **five stages**:
  │ 3 JSON files  │   │ 4 tools + system      │   │ resumable / isolated│   │ per-turn messages│   │ messages+tools │
  │ 11,896 items  │   │ prompt + call budget  │   │ timeout / parallel  │   │ tool call counts │   │ validation     │
  └──────────────┘   └───────────────────────┘   └─────────────────────┘   └──────────────────┘   └────────────────┘
-      ▲                     ▲                          ▲
-   data/questions/     examples/              tests/examples/
-                     assistant_deep_research.py  annotate_questions.py
+         ▲                      ▲                          ▲
+ data/questions/            scripts/                   scripts/
+                   assistant_deep_research.py   annotate_questions.py
 ```
 
 ### ① Question sets
 
 Three plain lists of questions (JSON arrays of strings) under
-`tests/examples/datasets/annotation_sources/questions/`. See
+`data/questions/`. See
 [Question sets and data provenance](#question-sets-and-data-provenance).
 
 ### ② The DeepResearch agent
 
-`examples/assistant_deep_research.py` defines `DeepResearchAgent`, a subclass of the
+`scripts/assistant_deep_research.py` defines `DeepResearchAgent`, a subclass of the
 framework's `Assistant` that registers four tools:
 
 | Tool | What it does | Implementation notes |
@@ -87,7 +87,7 @@ merge in local material → write the report. It also fixes the **report structu
 
 ### ③ The annotation runner
 
-`tests/examples/annotate_questions.py` drives everything. Four design decisions matter:
+`scripts/annotate_questions.py` drives everything. Four design decisions matter:
 
 | Decision | How | Why |
 | --- | --- | --- |
@@ -108,9 +108,9 @@ same directory aggregates per-source status counts and total duration.
 
 ### ⑤ Conversion to OpenAI SFT format
 
-`tests/examples/convert_annotations_to_openai.py` turns the JSONL into
+`scripts/convert_annotations_to_openai.py` turns the JSONL into
 `{messages, tools, metadata}` samples ready for training. The conversion logic is
-shared with `tests/examples/convert_traces.py`:
+shared with `scripts/convert_traces.py`:
 
 - **Rebuild the system message** from the trace's `started_at`, so the "current date"
   in the system prompt matches the day the trajectory was actually produced.
@@ -140,22 +140,22 @@ shared with `tests/examples/convert_traces.py`:
 ├── config.json                     LLM config (no secrets, no internal addresses)
 ├── config.local.json.example       secret config template
 ├── run_annotation.sh               annotation entry point
-├── examples/
+├── scripts/                        the pipeline
 │   ├── __init__.py
-│   └── assistant_deep_research.py  ② DeepResearch agent + the four tools
+│   ├── assistant_deep_research.py  ② DeepResearch agent + the four tools
+│   ├── annotate_questions.py       ③ annotation runner
+│   ├── convert_traces.py           trace → OpenAI format (library)
+│   └── convert_annotations_to_openai.py  ⑤ conversion entry point
 ├── qwen_agent/                     trimmed Qwen-Agent fork (see DEVIATIONS.md)
-├── tests/
+├── data/
+│   └── questions/                  ① question sets (one JSON per source dataset)
+│       ├── deep_research_9k_train_questions.json
+│       ├── fractal_questions.json
+│       └── open_deep_research_train_questions.json
+├── tests/                          offline unit tests
 │   ├── conftest.py
-│   └── examples/
-│       ├── annotate_questions.py          ③ annotation runner
-│       ├── convert_traces.py              trace → OpenAI format (library)
-│       ├── convert_annotations_to_openai.py  ⑤ conversion entry point
-│       ├── test_assistant_deep_research.py   offline unit tests
-│       ├── test_convert_traces.py            offline unit tests
-│       └── datasets/annotation_sources/questions/
-│           ├── deep_research_9k_train_questions.json
-│           ├── fractal_questions.json
-│           └── open_deep_research_train_questions.json
+│   ├── test_assistant_deep_research.py
+│   └── test_convert_traces.py
 └── outputs/                        (generated at run time, not committed)
 ```
 
@@ -175,8 +175,8 @@ pip install -r requirements.txt
 # Optional: local document parsing / reading PDF web pages
 pip install -r requirements-rag.txt
 
-# Optional: install as a package (not required — the scripts add the repo root
-# to sys.path themselves)
+# Optional: install the framework package (not required — the pipeline scripts
+# add the repository root to sys.path themselves, so they run from any cwd)
 pip install -e .
 ```
 
@@ -272,7 +272,7 @@ ANNOTATION_WORKERS=8 ANNOTATION_TIMEOUT=1800 bash run_annotation.sh
 Full runner options:
 
 ```
---questions-dir PATH       question directory (default tests/examples/datasets/annotation_sources/questions)
+--questions-dir PATH       question directory (default data/questions)
 --output-dir PATH          output directory (default outputs/deep_research_annotations)
 --source NAME              run one source only, repeatable; default: all
 --limit N                  run only the first N questions per source (0 = all)
@@ -289,7 +289,7 @@ Full runner options:
 ### 2) Convert to OpenAI format
 
 ```bash
-python3 tests/examples/convert_annotations_to_openai.py \
+python3 scripts/convert_annotations_to_openai.py \
   --input-dir outputs/deep_research_annotations \
   --output outputs/openai_messages/annotations.json \
   --reasoning keep
@@ -329,7 +329,7 @@ set -euo pipefail
 export SERPER_API_KEY=xxxxxx
 
 bash run_annotation.sh --save-trace
-python3 tests/examples/convert_annotations_to_openai.py \
+python3 scripts/convert_annotations_to_openai.py \
   --input-dir outputs/deep_research_annotations \
   --output outputs/openai_messages/annotations.json \
   --reasoning keep --pretty
@@ -415,8 +415,8 @@ row counts are recorded in the original project's `MANIFEST.json`.
 python3 -m pytest tests/ -q
 
 # CLI argument-parsing self-check
-python3 tests/examples/annotate_questions.py --help
-python3 tests/examples/convert_annotations_to_openai.py --help
+python3 scripts/annotate_questions.py --help
+python3 scripts/convert_annotations_to_openai.py --help
 
 # Config resolution self-check (issues no requests)
 LLM_API_KEY=dummy python3 -c "
@@ -425,9 +425,9 @@ cfg = load_config('config.json')
 print(get_llm_config(cfg)); print(get_agent_config(cfg))"
 ```
 
-`tests/examples/test_assistant_deep_research.py` covers HTML main-text extraction, the
+`tests/test_assistant_deep_research.py` covers HTML main-text extraction, the
 public-URL allowlist, search fallback and notebook CRUD with mocks;
-`tests/examples/test_convert_traces.py` covers trace normalization, tool-call pairing
+`tests/test_convert_traces.py` covers trace normalization, tool-call pairing
 validation and redaction.
 
 On a **minimal** installation (`requirements.txt` only) the suite reports

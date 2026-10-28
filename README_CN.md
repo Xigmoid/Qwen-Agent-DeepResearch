@@ -50,20 +50,20 @@
  │ 3 个 JSON     │   │ 4 个工具 + 系统提示词  │   │ 可恢复 / 进程隔离   │   │ 逐轮 messages     │   │ messages+tools  │
  │ 11,896 题     │   │ max_llm_calls 预算    │   │ 超时 / 并发         │   │ 工具调用计数      │   │ 校验 + 脱敏     │
  └──────────────┘   └───────────────────────┘   └─────────────────────┘   └──────────────────┘   └────────────────┘
-      ▲                     ▲                          ▲
-   data/questions/     examples/              tests/examples/
-                     assistant_deep_research.py  annotate_questions.py
+         ▲                      ▲                          ▲
+ data/questions/            scripts/                   scripts/
+                   assistant_deep_research.py   annotate_questions.py
 ```
 
 ### ① 问题集
 
 三份纯问题列表（JSON 数组，元素是问题字符串），放在
-`tests/examples/datasets/annotation_sources/questions/`。来源与抽取规则见
+`data/questions/`。来源与抽取规则见
 [问题集与数据来源](#问题集与数据来源)。
 
 ### ② DeepResearch Agent
 
-`examples/assistant_deep_research.py` 定义了 `DeepResearchAgent`，它继承框架的 `Assistant`，
+`scripts/assistant_deep_research.py` 定义了 `DeepResearchAgent`，它继承框架的 `Assistant`，
 注册 4 个工具：
 
 | 工具 | 作用 | 实现要点 |
@@ -81,7 +81,7 @@
 
 ### ③ 标注 runner
 
-`tests/examples/annotate_questions.py` 是整条流水线的驱动脚本，四个关键设计：
+`scripts/annotate_questions.py` 是整条流水线的驱动脚本，四个关键设计：
 
 | 设计 | 做法 | 为什么 |
 | --- | --- | --- |
@@ -99,8 +99,8 @@
 
 ### ⑤ 转 OpenAI SFT 格式
 
-`tests/examples/convert_annotations_to_openai.py` 把 JSONL 转成可直接喂给训练框架的
-`{messages, tools, metadata}` 样本。转换逻辑复用 `tests/examples/convert_traces.py`：
+`scripts/convert_annotations_to_openai.py` 把 JSONL 转成可直接喂给训练框架的
+`{messages, tools, metadata}` 样本。转换逻辑复用 `scripts/convert_traces.py`：
 
 - **补 system message**：用轨迹的 `started_at` 重新拼出当时的「当前时间」，
   保证 system prompt 与真实运行那天一致（否则时间戳会对不上）。
@@ -129,22 +129,22 @@
 ├── config.json                     LLM 配置（无密钥、无内网地址）
 ├── config.local.json.example       密钥配置模板
 ├── run_annotation.sh               标注入口
-├── examples/
+├── scripts/                        流水线代码
 │   ├── __init__.py
-│   └── assistant_deep_research.py  ② DeepResearch Agent + 4 个工具
+│   ├── assistant_deep_research.py  ② DeepResearch Agent + 4 个工具
+│   ├── annotate_questions.py       ③ 标注 runner
+│   ├── convert_traces.py           轨迹 → OpenAI 格式（转换库）
+│   └── convert_annotations_to_openai.py  ⑤ 转换入口
 ├── qwen_agent/                     裁剪版 Qwen-Agent（见 DEVIATIONS.md）
-├── tests/
+├── data/
+│   └── questions/                  ① 问题集（每个源数据集一个 JSON）
+│       ├── deep_research_9k_train_questions.json
+│       ├── fractal_questions.json
+│       └── open_deep_research_train_questions.json
+├── tests/                          离线单元测试
 │   ├── conftest.py
-│   └── examples/
-│       ├── annotate_questions.py          ③ 标注 runner
-│       ├── convert_traces.py              轨迹 → OpenAI 格式（转换库）
-│       ├── convert_annotations_to_openai.py  ⑤ 转换入口
-│       ├── test_assistant_deep_research.py   离线单测
-│       ├── test_convert_traces.py            离线单测
-│       └── datasets/annotation_sources/questions/
-│           ├── deep_research_9k_train_questions.json
-│           ├── fractal_questions.json
-│           └── open_deep_research_train_questions.json
+│   ├── test_assistant_deep_research.py
+│   └── test_convert_traces.py
 └── outputs/                        （运行时生成，不入库）
 ```
 
@@ -164,7 +164,8 @@ pip install -r requirements.txt
 # 可选：本地文档解析 / 读 PDF 网页
 pip install -r requirements-rag.txt
 
-# 可选：装成包（不装也能跑，脚本会自己把仓库根目录加进 sys.path）
+# 可选：装成包（不装也能跑，脚本会自己把仓库根目录加进 sys.path，
+#       因此从任意目录调用都可以）
 pip install -e .
 ```
 
@@ -254,7 +255,7 @@ ANNOTATION_WORKERS=8 ANNOTATION_TIMEOUT=1800 bash run_annotation.sh
 runner 的完整参数：
 
 ```
---questions-dir PATH       问题目录（默认 tests/examples/datasets/annotation_sources/questions）
+--questions-dir PATH       问题目录（默认 data/questions）
 --output-dir PATH          输出目录（默认 outputs/deep_research_annotations）
 --source NAME              只跑某个来源，可重复；默认跑全部
 --limit N                  每个来源只跑前 N 题（0 = 全部）
@@ -271,7 +272,7 @@ runner 的完整参数：
 ### 2）转换成 OpenAI 格式
 
 ```bash
-python3 tests/examples/convert_annotations_to_openai.py \
+python3 scripts/convert_annotations_to_openai.py \
   --input-dir outputs/deep_research_annotations \
   --output outputs/openai_messages/annotations.json \
   --reasoning keep
@@ -311,7 +312,7 @@ set -euo pipefail
 export SERPER_API_KEY=xxxxxx
 
 bash run_annotation.sh --save-trace
-python3 tests/examples/convert_annotations_to_openai.py \
+python3 scripts/convert_annotations_to_openai.py \
   --input-dir outputs/deep_research_annotations \
   --output outputs/openai_messages/annotations.json \
   --reasoning keep --pretty
@@ -391,8 +392,8 @@ tool 消息用 `tool_call_id` 与之配对，可直接喂给大多数 SFT 训练
 python3 -m pytest tests/ -q
 
 # 两个 CLI 的参数解析自检
-python3 tests/examples/annotate_questions.py --help
-python3 tests/examples/convert_annotations_to_openai.py --help
+python3 scripts/annotate_questions.py --help
+python3 scripts/convert_annotations_to_openai.py --help
 
 # 配置解析自检（不发起任何请求）
 LLM_API_KEY=dummy python3 -c "
@@ -401,8 +402,8 @@ cfg = load_config('config.json')
 print(get_llm_config(cfg)); print(get_agent_config(cfg))"
 ```
 
-`tests/examples/test_assistant_deep_research.py` 用 mock 覆盖了 HTML 正文抽取、
-URL 白名单校验、搜索降级、笔记本增删查等；`tests/examples/test_convert_traces.py`
+`tests/test_assistant_deep_research.py` 用 mock 覆盖了 HTML 正文抽取、
+URL 白名单校验、搜索降级、笔记本增删查等；`tests/test_convert_traces.py`
 覆盖了轨迹归一化、tool_call 配对校验与脱敏。
 
 **最小安装**（只装 `requirements.txt`）下测试结果为 `13 passed, 1 skipped` —— 被跳过的是

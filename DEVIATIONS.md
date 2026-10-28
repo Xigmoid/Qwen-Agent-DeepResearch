@@ -89,8 +89,8 @@ instead. Behaviour is identical; only the message changed.
 | File | Change |
 | --- | --- |
 | `qwen_agent/tools/retrieval.py` | `pip install "qwen-agent[rag]"` → `pip install -r requirements-rag.txt` |
-| `examples/assistant_deep_research.py` | same |
-| `tests/examples/test_assistant_deep_research.py` | the notebook case and the local-document case were split into two tests; the local-document one is guarded by `pytest.importorskip('rank_bm25')` / `pytest.importorskip('pdfplumber')` so a minimal installation reports a skip instead of a failure |
+| `scripts/assistant_deep_research.py` | same |
+| `tests/test_assistant_deep_research.py` | the notebook case and the local-document case were split into two tests; the local-document one is guarded by `pytest.importorskip('rank_bm25')` / `pytest.importorskip('pdfplumber')` so a minimal installation reports a skip instead of a failure |
 
 ---
 
@@ -152,35 +152,57 @@ interpreter).
 
 > **Note.** `qwen_agent/tools/web_search.py` is upstream's Serper/DashScope search
 > tool. The DeepResearch agent defines its **own** `WebSearch` class in
-> `examples/assistant_deep_research.py` that keeps the result URLs, so removing the
+> `scripts/assistant_deep_research.py` that keeps the result URLs, so removing the
 > upstream one changes nothing.
 
 ---
 
-## 3. What was *not* changed
+## 3. Repository layout
+
+The pipeline was originally laid out as `tests/examples/…` with the question sets under
+`tests/examples/datasets/annotation_sources/questions/`, mirroring the upstream
+Qwen-Agent repository. That put the pipeline CLIs exactly where a reader expects unit
+tests, so this repository reorganises it into three clearly separated layers:
+
+| Layer | Location | Contents |
+| --- | --- | --- |
+| Code | `scripts/` | the DeepResearch agent and the three pipeline CLIs |
+| Data | `data/questions/` | the three extracted question sets (one JSON per source dataset) |
+| Tests | `tests/` | the offline unit tests |
+
+The only code changes this required were the repository-root anchors
+(`Path(__file__).resolve().parents[2]` → `parents[1]`), the default question directory
+(`DEFAULT_QUESTIONS_DIR`), the default output directory of `convert_traces.py`, and the
+intra-package imports (`examples.assistant_deep_research` → `scripts.assistant_deep_research`,
+`tests.examples.convert_traces` → `scripts.convert_traces`). **No behaviour changed.**
+
+---
+
+## 4. What was *not* changed
 
 * `qwen_agent/agents/assistant.py`, `qwen_agent/agents/fncall_agent.py`,
   `qwen_agent/agent.py`, `qwen_agent/settings.py`, `qwen_agent/llm/base.py`,
   `qwen_agent/llm/schema.py`, `qwen_agent/llm/oai.py` (apart from §1.1) and the whole
   `qwen_agent/tools/` retrieval stack are byte-identical to upstream (apart from the
   install hint in §1.5).
-* `tests/examples/annotate_questions.py`, `tests/examples/convert_traces.py`,
-  `tests/examples/convert_annotations_to_openai.py` and
-  `tests/examples/test_convert_traces.py` are **byte-identical copies** of the
-  working implementation — no refactoring was applied, so the numbers produced by this
-  repository match the original pipeline.
-* `examples/assistant_deep_research.py` differs only in the install hint (§1.5).
+* `scripts/annotate_questions.py`, `scripts/convert_traces.py` and
+  `scripts/convert_annotations_to_openai.py` are **verbatim copies** of the working
+  implementation apart from the path anchors and imports listed in §3 — no logic was
+  refactored, so the numbers produced by this repository match the original pipeline.
+* `scripts/assistant_deep_research.py` differs only in the install hint (§1.5).
+* `tests/test_convert_traces.py` is byte-identical apart from its import line.
 
 ---
 
-## 4. Verification performed
+## 5. Verification performed
 
 | Check | Result |
 | --- | --- |
-| `diff -r` against a fresh upstream clone | see §1–§3 above |
+| `diff -r` against a fresh upstream clone | see §1–§2 above |
 | `python3 -m pytest tests/ -q` in a clean venv, core requirements only | 13 passed, 1 skipped |
 | `python3 -m pytest tests/ -q` in a clean venv, with `requirements-rag.txt` | 14 passed |
-| `--help` on `annotate_questions.py`, `convert_annotations_to_openai.py`, `convert_traces.py` | all OK |
-| `python3 -m compileall qwen_agent examples tests` | OK |
+| `--help` on `scripts/annotate_questions.py`, `scripts/convert_annotations_to_openai.py`, `scripts/convert_traces.py` | all OK |
+| `python3 -m compileall qwen_agent scripts tests` | OK |
 | `pip install -e .` then `import qwen_agent` | OK |
+| End-to-end: annotate 1 question against a live tool-calling endpoint, then convert | `passed`, 0 invalid samples, 0 validation errors |
 | Scan for API keys, internal IPs and local absolute paths in tracked files | clean |

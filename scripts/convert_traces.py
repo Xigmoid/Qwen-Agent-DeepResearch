@@ -14,11 +14,11 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
 
-ROOT = Path(__file__).resolve().parents[2]
+ROOT = Path(__file__).resolve().parents[1]
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
-from examples.assistant_deep_research import (  # noqa: E402
+from scripts.assistant_deep_research import (  # noqa: E402
     DEEP_RESEARCH_SYSTEM_PROMPT,
     ReadWebpage,
     ResearchNotes,
@@ -574,7 +574,7 @@ def _write_jsonl(path: Path, samples: List[Dict[str, Any]]) -> None:
 def main() -> None:
     parser = argparse.ArgumentParser(description='Convert DeepResearch traces to OpenAI Chat JSONL.')
     parser.add_argument('--input', required=True, help='Trace directory, trace JSON, or .llm_calls.jsonl file.')
-    parser.add_argument('--output', default=str(Path(__file__).with_name('datasets') / 'deep_research_openai'))
+    parser.add_argument('--output', default=str(ROOT / 'outputs' / 'deep_research_openai'))
     parser.add_argument('--source', choices=['auto', 'llm_calls', 'trace'], default='auto')
     parser.add_argument('--reasoning', choices=['keep', 'strip', 'inline'], default='keep')
     parser.add_argument('--val-ratio', type=float, default=0.2)

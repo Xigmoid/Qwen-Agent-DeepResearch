@@ -26,8 +26,8 @@ to use a different config file, or `QWEN_AGENT_MAX_LLM_CALL_PER_RUN` to override
 the configured call budget.
 
 Headless usage (no GUI required):
-    python examples/assistant_deep_research.py "your research question"
-    python examples/assistant_deep_research.py   # interactive terminal loop
+    python scripts/assistant_deep_research.py "your research question"
+    python scripts/assistant_deep_research.py   # interactive terminal loop
 
 Optional extras:
     pip install "qwen-agent[rag]"  # local document retrieval and PDF web pages
