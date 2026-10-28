@@ -45,12 +45,13 @@
 整条链路是**五个阶段**，从左到右：
 
 ```mermaid
-flowchart LR
-    Q["<b>① 问题集</b><br/>3 个 JSON 文件<br/>11,896 题<br/><code>data/questions/</code>"]
-    A["<b>② DeepResearch Agent</b><br/>4 个工具 + 系统提示词<br/>max_llm_calls 预算<br/><code>scripts/assistant_deep_research.py</code>"]
-    R["<b>③ 标注 runner</b><br/>可恢复 / 进程隔离<br/>超时 / 并发<br/><code>scripts/annotate_questions.py</code>"]
-    T["<b>④ 轨迹 JSONL</b><br/>逐轮 messages<br/>工具调用计数<br/><code>outputs/deep_research_annotations/</code>"]
-    S["<b>⑤ OpenAI SFT</b><br/>messages + tools<br/>校验 + 脱敏<br/><code>outputs/openai_messages/</code>"]
+%%{init: {"flowchart": {"rankSpacing": 28, "nodeSpacing": 20, "padding": 8}}}%%
+flowchart TD
+    Q["<b>① 问题集</b><br/>3 个 JSON 文件 · 11,896 题<br/><code>data/questions/</code>"]
+    A["<b>② DeepResearch Agent</b><br/>4 个工具 + 系统提示词 · 调用预算<br/><code>scripts/assistant_deep_research.py</code>"]
+    R["<b>③ 标注 runner</b><br/>可恢复 / 进程隔离 · 超时 / 并发<br/><code>scripts/annotate_questions.py</code>"]
+    T["<b>④ 轨迹 JSONL</b><br/>逐轮 messages · 工具调用计数<br/><code>outputs/deep_research_annotations/</code>"]
+    S["<b>⑤ OpenAI SFT</b><br/>messages + tools · 校验<br/><code>outputs/openai_messages/</code>"]
     Q --> A --> R --> T --> S
 ```
 
