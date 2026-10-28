@@ -45,13 +45,13 @@ Steps 3 and 4 are the hard part: the framework's own memory compacts history, pa
 The pipeline has **five stages**:
 
 ```mermaid
-%%{init: {"flowchart": {"rankSpacing": 28, "nodeSpacing": 20, "padding": 8}}}%%
+%%{init: {"flowchart": {"rankSpacing": 26, "nodeSpacing": 20, "padding": 10}}}%%
 flowchart TD
-    Q["<b>① Questions</b><br/>3 JSON files · 11,896 items<br/><code>data/questions/</code>"]
-    A["<b>② DeepResearch Agent</b><br/>4 tools + system prompt · call budget<br/><code>scripts/assistant_deep_research.py</code>"]
-    R["<b>③ Annotation runner</b><br/>resumable / isolated · timeout / parallel<br/><code>scripts/annotate_questions.py</code>"]
-    T["<b>④ Trace JSONL</b><br/>per-turn messages · tool call counts<br/><code>outputs/deep_research_annotations/</code>"]
-    S["<b>⑤ OpenAI SFT</b><br/>messages + tools · validation<br/><code>outputs/openai_messages/</code>"]
+    Q["<b>① Questions</b><br/>3 JSON files<br/>11,896 items<br/><code>data/questions/</code>"]
+    A["<b>② DeepResearch Agent</b><br/>4 tools + prompt<br/>call budget<br/><code>scripts/assistant_deep_research.py</code>"]
+    R["<b>③ Annotation runner</b><br/>resumable · isolated<br/>timeout · parallel<br/><code>scripts/annotate_questions.py</code>"]
+    T["<b>④ Trace JSONL</b><br/>per-turn messages<br/>tool call counts<br/><code>outputs/deep_research_annotations/</code>"]
+    S["<b>⑤ OpenAI SFT</b><br/>messages + tools<br/>validation<br/><code>outputs/openai_messages/</code>"]
     Q --> A --> R --> T --> S
 ```
 
