@@ -178,7 +178,39 @@ intra-package imports (`examples.assistant_deep_research` → `scripts.assistant
 
 ---
 
-## 4. What was *not* changed
+## 4. README assets — the pipeline diagram
+
+The README shows the five pipeline stages as an **image** (`docs/pipeline.svg`,
+`docs/pipeline.zh.svg`) rather than as a Mermaid block.
+
+**Why not Mermaid.** GitHub renders Mermaid with its own renderer
+(`viewscreen.githubusercontent.com`), whose flowchart configuration is fixed for
+every repository: `htmlLabels: null`, `wrappingWidth: 120`, `minNodeWidth: 120`,
+`padding: 15`, `theme: redux-color`, `look: neo`. Two consequences:
+
+* a label wider than 120 px is wrapped by the renderer, so a path such as
+  `scripts/assistant_deep_research.py` overflows the box it is drawn in;
+* a `%%{init: ...}%%` directive can only override the spacing keys — theme,
+  label renderer and wrap width stay under GitHub's control.
+
+Inline HTML and inline SVG are stripped from a README by GitHub's sanitizer, so
+an image file is the only form that actually renders. The diagram is therefore
+committed as SVG and embedded with a relative link (`docs/pipeline.svg`).
+
+The SVGs are generated, not hand-drawn:
+
+```bash
+python scripts/render_pipeline_diagram.py
+```
+
+`scripts/render_pipeline_diagram.py` uses the standard library only. It emits
+the SVG as text so that the diagram can be reviewed in a diff and regenerated
+with one command. It is the only file in `scripts/` that is not part of the
+pipeline itself, and nothing in the pipeline imports it.
+
+---
+
+## 5. What was *not* changed
 
 * `qwen_agent/agents/assistant.py`, `qwen_agent/agents/fncall_agent.py`,
   `qwen_agent/agent.py`, `qwen_agent/settings.py`, `qwen_agent/llm/base.py`,
@@ -194,7 +226,7 @@ intra-package imports (`examples.assistant_deep_research` → `scripts.assistant
 
 ---
 
-## 5. Verification performed
+## 6. Verification performed
 
 | Check | Result |
 | --- | --- |
@@ -205,4 +237,6 @@ intra-package imports (`examples.assistant_deep_research` → `scripts.assistant
 | `python3 -m compileall qwen_agent scripts tests` | OK |
 | `pip install -e .` then `import qwen_agent` | OK |
 | End-to-end: annotate 1 question against a live tool-calling endpoint, then convert | `passed`, 0 invalid samples, 0 validation errors |
+| `python scripts/render_pipeline_diagram.py` twice — byte-identical output | OK |
+| `docs/pipeline*.svg` parsed as XML | valid |
 | Scan for API keys, internal IPs and local absolute paths in tracked files | clean |

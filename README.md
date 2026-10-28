@@ -44,16 +44,7 @@ Steps 3 and 4 are the hard part: the framework's own memory compacts history, pa
 
 The pipeline has **five stages**:
 
-```mermaid
-%%{init: {"flowchart": {"rankSpacing": 26, "nodeSpacing": 20, "padding": 10}}}%%
-flowchart TD
-    Q["<b>① Questions</b><br/>3 JSON files<br/>11,896 items<br/><code>data/questions/</code>"]
-    A["<b>② DeepResearch Agent</b><br/>4 tools + prompt<br/>call budget<br/><code>scripts/assistant_deep_research.py</code>"]
-    R["<b>③ Annotation runner</b><br/>resumable · isolated<br/>timeout · parallel<br/><code>scripts/annotate_questions.py</code>"]
-    T["<b>④ Trace JSONL</b><br/>per-turn messages<br/>tool call counts<br/><code>outputs/deep_research_annotations/</code>"]
-    S["<b>⑤ OpenAI SFT</b><br/>messages + tools<br/>validation<br/><code>outputs/openai_messages/</code>"]
-    Q --> A --> R --> T --> S
-```
+![DeepResearch trajectory-synthesis pipeline: five stages from the question sets, through the DeepResearch agent and the annotation runner, to the trace JSONL and the OpenAI SFT conversion](docs/pipeline.svg)
 
 ### ① Question sets
 
@@ -140,12 +131,16 @@ shared with `scripts/convert_traces.py`:
 ├── config.json                     LLM config (no secrets, no internal addresses)
 ├── config.local.json.example       secret config template
 ├── run_annotation.sh               annotation entry point
+├── docs/                           README assets
+│   ├── pipeline.svg                pipeline diagram (English)
+│   └── pipeline.zh.svg             pipeline diagram (Chinese)
 ├── scripts/                        the pipeline
 │   ├── __init__.py
 │   ├── assistant_deep_research.py  ② DeepResearch agent + the four tools
 │   ├── annotate_questions.py       ③ annotation runner
 │   ├── convert_traces.py           trace → OpenAI format (library)
-│   └── convert_annotations_to_openai.py  ⑤ conversion entry point
+│   ├── convert_annotations_to_openai.py  ⑤ conversion entry point
+│   └── render_pipeline_diagram.py  regenerates docs/pipeline*.svg
 ├── qwen_agent/                     trimmed Qwen-Agent fork (see DEVIATIONS.md)
 ├── data/
 │   └── questions/                  ① question sets (one JSON per source dataset)

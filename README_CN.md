@@ -42,18 +42,9 @@
 
 ## 实现路径
 
-整条链路是**五个阶段**，从左到右：
+整条链路是**五个阶段**，从上到下：
 
-```mermaid
-%%{init: {"flowchart": {"rankSpacing": 26, "nodeSpacing": 20, "padding": 10}}}%%
-flowchart TD
-    Q["<b>① 问题集</b><br/>3 个 JSON 文件<br/>11,896 题<br/><code>data/questions/</code>"]
-    A["<b>② DeepResearch Agent</b><br/>4 个工具 + 提示词<br/>调用预算<br/><code>scripts/assistant_deep_research.py</code>"]
-    R["<b>③ 标注 runner</b><br/>可恢复 · 进程隔离<br/>超时 · 并发<br/><code>scripts/annotate_questions.py</code>"]
-    T["<b>④ 轨迹 JSONL</b><br/>逐轮 messages<br/>工具调用计数<br/><code>outputs/deep_research_annotations/</code>"]
-    S["<b>⑤ OpenAI SFT</b><br/>messages + tools<br/>校验<br/><code>outputs/openai_messages/</code>"]
-    Q --> A --> R --> T --> S
-```
+![DeepResearch 轨迹合成流水线：从问题集出发，经 DeepResearch Agent 与标注运行器，产出轨迹 JSONL 与 OpenAI SFT 数据](docs/pipeline.zh.svg)
 
 ### ① 问题集
 
@@ -129,12 +120,16 @@ flowchart TD
 ├── config.json                     LLM 配置（无密钥、无内网地址）
 ├── config.local.json.example       密钥配置模板
 ├── run_annotation.sh               标注入口
+├── docs/                           README 配图
+│   ├── pipeline.svg                流水线图（英文）
+│   └── pipeline.zh.svg             流水线图（中文）
 ├── scripts/                        流水线代码
 │   ├── __init__.py
 │   ├── assistant_deep_research.py  ② DeepResearch Agent + 4 个工具
 │   ├── annotate_questions.py       ③ 标注 runner
 │   ├── convert_traces.py           轨迹 → OpenAI 格式（转换库）
-│   └── convert_annotations_to_openai.py  ⑤ 转换入口
+│   ├── convert_annotations_to_openai.py  ⑤ 转换入口
+│   └── render_pipeline_diagram.py  重新生成 docs/pipeline*.svg
 ├── qwen_agent/                     裁剪版 Qwen-Agent（见 DEVIATIONS.md）
 ├── data/
 │   └── questions/                  ① 问题集（每个源数据集一个 JSON）
